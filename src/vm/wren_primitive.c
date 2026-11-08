@@ -2,18 +2,18 @@
 
 #include <math.h>
 
-// Validates that [value] is an integer within `[0, count)`. Also allows
-// negative indices which map backwards from the end. Returns the valid positive
-// index value. If invalid, reports an error and returns `UINT32_MAX`.
+// Valida que [value] sea un entero dentro de `[0, count)`. También permite
+// índices negativos que cuentan hacia atrás desde el final. Devuelve el índice
+// positivo válido. Si es inválido, informa de un error y devuelve `UINT32_MAX`.
 static uint32_t validateIndexValue(WrenVM* vm, uint32_t count, double value,
                                    const char* argName)
 {
   if (!validateIntValue(vm, value, argName)) return UINT32_MAX;
   
-  // Negative indices count from the end.
+  // Los índices negativos cuentan desde el final.
   if (value < 0) value = count + value;
   
-  // Check bounds.
+  // Comprueba los límites.
   if (value >= 0 && value < count) return (uint32_t)value;
   
   vm->fiber->error = wrenStringFormat(vm, "$ out of bounds.", argName);
@@ -40,7 +40,7 @@ bool validateIntValue(WrenVM* vm, double value, const char* argName)
 
 bool validateInt(WrenVM* vm, Value arg, const char* argName)
 {
-  // Make sure it's a number first.
+  // Primero, asegúrate de que sea un número.
   if (!validateNum(vm, arg, argName)) return false;
   return validateIntValue(vm, AS_NUM(arg), argName);
 }
@@ -70,9 +70,9 @@ uint32_t calculateRange(WrenVM* vm, ObjRange* range, uint32_t* length,
 {
   *step = 0;
 
-  // Edge case: an empty range is allowed at the end of a sequence. This way,
-  // list[0..-1] and list[0...list.count] can be used to copy a list even when
-  // empty.
+  // Caso límite: se permite un rango vacío al final de una secuencia. De este
+  // modo, list[0..-1] y list[0...list.count] se pueden usar para copiar una lista
+  // incluso cuando está vacía.
   if (range->from == *length &&
       range->to == (range->isInclusive ? -1.0 : (double)*length))
   {
@@ -83,29 +83,29 @@ uint32_t calculateRange(WrenVM* vm, ObjRange* range, uint32_t* length,
   uint32_t from = validateIndexValue(vm, *length, range->from, "Range start");
   if (from == UINT32_MAX) return UINT32_MAX;
 
-  // Bounds check the end manually to handle exclusive ranges.
+  // Comprueba manualmente los límites del final para manejar rangos exclusivos.
   double value = range->to;
   if (!validateIntValue(vm, value, "Range end")) return UINT32_MAX;
 
-  // Negative indices count from the end.
+  // Los índices negativos cuentan desde el final.
   if (value < 0) value = *length + value;
 
-  // Convert the exclusive range to an inclusive one.
+  // Convierte el rango exclusivo en uno inclusivo.
   if (!range->isInclusive)
   {
-    // An exclusive range with the same start and end points is empty.
+    // Un rango exclusivo con los mismos puntos inicial y final está vacío.
     if (value == from)
     {
       *length = 0;
       return from;
     }
 
-    // Shift the endpoint to make it inclusive, handling both increasing and
-    // decreasing ranges.
+    // Desplaza el extremo para hacerlo inclusivo, manejando tanto rangos
+    // crecientes como decrecientes.
     value += value >= from ? -1 : 1;
   }
 
-  // Check bounds.
+  // Comprueba los límites.
   if (value < 0 || value >= *length)
   {
     vm->fiber->error = CONST_STRING(vm, "Range end out of bounds.");

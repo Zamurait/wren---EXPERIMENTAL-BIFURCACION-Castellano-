@@ -4,7 +4,7 @@
 
 void wrenDebugPrintStackTrace(WrenVM* vm)
 {
-  // Bail if the host doesn't enable printing errors.
+  // Salir si el anfitrión no habilitó la impresión de errores.
   if (vm->config.errorFn == NULL) return;
   
   ObjFiber* fiber = vm->fiber;
@@ -15,8 +15,8 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
   }
   else
   {
-    // TODO: Print something a little useful here. Maybe the name of the error's
-    // class?
+    // TODO: Imprimir aquí algo un poco más útil. ¿Quizás el nombre de la clase
+    // del error?
     vm->config.errorFn(vm, WREN_ERROR_RUNTIME,
                        NULL, -1, "[error object]");
   }
@@ -26,15 +26,16 @@ void wrenDebugPrintStackTrace(WrenVM* vm)
     CallFrame* frame = &fiber->frames[i];
     ObjFn* fn = frame->closure->fn;
 
-    // Skip over stub functions for calling methods from the C API.
+    // Saltar las funciones auxiliares para llamar métodos desde la API de C.
     if (fn->module == NULL) continue;
     
-    // The built-in core module has no name. We explicitly omit it from stack
-    // traces since we don't want to highlight to a user the implementation
-    // detail of what part of the core module is written in C and what is Wren.
+    // El módulo principal integrado no tiene nombre. Lo omitimos explícitamente
+    // de las trazas de pila porque no queremos destacar al usuario el detalle de
+    // implementación sobre qué parte del módulo principal está escrita en C y
+    // cuál en Wren.
     if (fn->module->name == NULL) continue;
     
-    // -1 because IP has advanced past the instruction that it just executed.
+    // -1 porque IP avanzó más allá de la instrucción que acaba de ejecutar.
     int line = fn->debug->sourceLines.data[frame->ip - fn->code.data - 1];
     vm->config.errorFn(vm, WREN_ERROR_STACK_TRACE,
                        fn->module->name->value, line,
@@ -345,7 +346,7 @@ static int dumpInstruction(WrenVM* vm, ObjFn* fn, int i, int* lastLine)
       break;
   }
 
-  // Return how many bytes this instruction takes, or -1 if it's an END.
+  // Devuelve cuántos bytes ocupa esta instrucción, o -1 si es END.
   if (code == CODE_END) return -1;
   return i - start;
 
