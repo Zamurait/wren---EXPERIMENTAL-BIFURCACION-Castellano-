@@ -10,7 +10,8 @@
 
 #include "wren_opt_random.wren.inc"
 
-// Implements the well equidistributed long-period linear PRNG (WELL512a).
+// Implementa el generador de números pseudoaleatorios lineal de período largo
+// y buena equidistribución (WELL512a).
 //
 // https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear
 typedef struct
@@ -19,7 +20,7 @@ typedef struct
   uint32_t index;
 } Well512;
 
-// Code from: http://www.lomont.org/Math/Papers/2008/Lomont_PRNG_2008.pdf
+// Código de: http://www.lomont.org/Math/Papers/2008/Lomont_PRNG_2008.pdf
 static uint32_t advanceState(Well512* well)
 {
   uint32_t a, b, c, d;
@@ -79,17 +80,17 @@ static void randomFloat(WrenVM* vm)
 {
   Well512* well = (Well512*)wrenGetSlotForeign(vm, 0);
 
-  // A double has 53 bits of precision in its mantissa, and we'd like to take
-  // full advantage of that, so we need 53 bits of random source data.
+  // Un double tiene 53 bits de precisión en su mantisa y queremos aprovecharlos
+  // por completo, así que necesitamos 53 bits de datos de origen aleatorio.
 
-  // First, start with 32 random bits, shifted to the left 21 bits.
+  // Primero, empieza con 32 bits aleatorios desplazados 21 bits a la izquierda.
   double result = (double)advanceState(well) * (1 << 21);
 
-  // Then add another 21 random bits.
+  // Luego añade otros 21 bits aleatorios.
   result += (double)(advanceState(well) & ((1 << 21) - 1));
 
-  // Now we have a number from 0 - (2^53). Divide be the range to get a double
-  // from 0 to 1.0 (half-inclusive).
+  // Ahora tenemos un número de 0 a (2^53). Divide por el rango para obtener un
+  // double de 0 a 1.0 (incluye el extremo inferior).
   result /= 9007199254740992.0;
 
   wrenSetSlotDouble(vm, 0, result);
