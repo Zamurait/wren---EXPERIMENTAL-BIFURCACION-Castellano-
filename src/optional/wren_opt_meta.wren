@@ -11,7 +11,7 @@ class Meta {
     if (!(source is String)) Fiber.abort("Source code must be a string.")
 
     var closure = compile_(source, false, false)
-    // TODO: Include compile errors.
+    // TODO: Incluir errores de compilación.
     if (closure == null) Fiber.abort("Could not compile source code.")
 
     closure.call()

@@ -8,12 +8,12 @@
 
 const char* wrenRandomSource();
 WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm,
-                                                   const char* module,
-                                                   const char* className);
+                                                    const char* module,
+                                                    const char* className);
 WrenForeignMethodFn wrenRandomBindForeignMethod(WrenVM* vm,
-                                                const char* className,
-                                                bool isStatic,
-                                                const char* signature);
+                                                 const char* className,
+                                                 bool isStatic,
+                                                 const char* signature);
 
 #endif
 

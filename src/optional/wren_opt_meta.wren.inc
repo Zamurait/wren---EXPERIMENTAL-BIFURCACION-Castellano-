@@ -1,4 +1,4 @@
-// Generated automatically from src/optional/wren_opt_meta.wren. Do not edit.
+// Generado automáticamente desde src/optional/wren_opt_meta.wren. No editar.
 static const char* metaModuleSource =
 "class Meta {\n"
 "  static getModuleVariables(module) {\n"
@@ -13,7 +13,7 @@ static const char* metaModuleSource =
 "    if (!(source is String)) Fiber.abort(\"Source code must be a string.\")\n"
 "\n"
 "    var closure = compile_(source, false, false)\n"
-"    // TODO: Include compile errors.\n"
+"    // TODO: Incluir errores de compilación.\n"
 "    if (closure == null) Fiber.abort(\"Could not compile source code.\")\n"
 "\n"
 "    closure.call()\n"

@@ -5,19 +5,19 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// The Wren semantic version number components.
+// El número de versión semántica de Wren.
 #define WREN_VERSION_MAJOR 0
 #define WREN_VERSION_MINOR 4
 #define WREN_VERSION_PATCH 0
 
-// A human-friendly string representation of the version.
+// Una representación legible para los humanos de la versión.
 #define WREN_VERSION_STRING "0.4.0"
 
-// A monotonically increasing numeric representation of the version number. Use
-// this if you want to do range checks over versions.
+// Una representación numérica y monotónicamente creciente del número de
+// versión. Úsala si quieres hacer comprobaciones de rango entre versiones.
 #define WREN_VERSION_NUMBER (WREN_VERSION_MAJOR * 1000000 +                    \
-                             WREN_VERSION_MINOR * 1000 +                       \
-                             WREN_VERSION_PATCH)
+                              WREN_VERSION_MINOR * 1000 +                       \
+                              WREN_VERSION_PATCH)
 
 #ifndef WREN_API
   #if defined(_MSC_VER) && defined(WREN_API_DLLEXPORT)
@@ -27,62 +27,64 @@
   #endif
 #endif //WREN_API
 
-// A single virtual machine for executing Wren code.
+// Una única máquina virtual para ejecutar código Wren.
 //
-// Wren has no global state, so all state stored by a running interpreter lives
-// here.
+// Wren no tiene estado global, por lo que todo el estado almacenado por un
+// intérprete en ejecución vive aquí.
 typedef struct WrenVM WrenVM;
 
-// A handle to a Wren object.
+// Un identificador para un objeto Wren.
 //
-// This lets code outside of the VM hold a persistent reference to an object.
-// After a handle is acquired, and until it is released, this ensures the
-// garbage collector will not reclaim the object it references.
+// Esto permite que código fuera de la VM mantenga una referencia persistente a
+// un objeto. Después de obtener un identificador y hasta que se libere, esto
+// garantiza que el recolector de basura no reclamará el objeto al que hace
+// referencia.
 typedef struct WrenHandle WrenHandle;
 
-// A generic allocation function that handles all explicit memory management
-// used by Wren. It's used like so:
+// Una función genérica de asignación que maneja toda la gestión explícita de
+// memoria utilizada por Wren. Se usa así:
 //
-// - To allocate new memory, [memory] is NULL and [newSize] is the desired
-//   size. It should return the allocated memory or NULL on failure.
+// - Para asignar memoria nueva, [memory] es NULL y [newSize] es el tamaño
+//   deseado. Debe devolver la memoria asignada o NULL si falla.
 //
-// - To attempt to grow an existing allocation, [memory] is the memory, and
-//   [newSize] is the desired size. It should return [memory] if it was able to
-//   grow it in place, or a new pointer if it had to move it.
+// - Para intentar aumentar una asignación existente, [memory] es la memoria y
+//   [newSize] es el tamaño deseado. Debe devolver [memory] si pudo ampliar la
+//   memoria in situ, o un puntero nuevo si tuvo que moverla.
 //
-// - To shrink memory, [memory] and [newSize] are the same as above but it will
-//   always return [memory].
+// - Para reducir memoria, [memory] y [newSize] son los mismos que arriba, pero
+//   siempre devolverá [memory].
 //
-// - To free memory, [memory] will be the memory to free and [newSize] will be
-//   zero. It should return NULL.
+// - Para liberar memoria, [memory] será la memoria a liberar y [newSize] será
+//   cero. Debe devolver NULL.
 typedef void* (*WrenReallocateFn)(void* memory, size_t newSize, void* userData);
 
-// A function callable from Wren code, but implemented in C.
+// Una función invocable desde código Wren, pero implementada en C.
 typedef void (*WrenForeignMethodFn)(WrenVM* vm);
 
-// A finalizer function for freeing resources owned by an instance of a foreign
-// class. Unlike most foreign methods, finalizers do not have access to the VM
-// and should not interact with it since it's in the middle of a garbage
-// collection.
+// Una función finalizadora para liberar recursos propiedad de una instancia de
+// una clase externa. A diferencia de la mayoría de los métodos externos,
+// finalizadores no tienen acceso a la VM y no deben interactuar con ella, ya
+// que se encuentran en medio de una recolección de basura.
 typedef void (*WrenFinalizerFn)(void* data);
 
-// Gives the host a chance to canonicalize the imported module name,
-// potentially taking into account the (previously resolved) name of the module
-// that contains the import. Typically, this is used to implement relative
-// imports.
+// Da al anfitrión la oportunidad de canonizar el nombre del módulo importado,
+// posiblemente teniendo en cuenta el nombre (ya resuelto) del módulo que lo
+// contiene. Normalmente, esto se usa para implementar importaciones relativas.
 typedef const char* (*WrenResolveModuleFn)(WrenVM* vm,
     const char* importer, const char* name);
 
-// Forward declare
+// Declaración adelantada.
 struct WrenLoadModuleResult;
 
-// Called after loadModuleFn is called for module [name]. The original returned result
-// is handed back to you in this callback, so that you can free memory if appropriate.
+// Se invoca después de que se llame a loadModuleFn para el módulo [name]. El
+// resultado original devuelto se te entrega en esta devolución de llamada, para
+// que puedas liberar memoria si es apropiado.
 typedef void (*WrenLoadModuleCompleteFn)(WrenVM* vm, const char* name, struct WrenLoadModuleResult result);
 
-// The result of a loadModuleFn call. 
-// [source] is the source code for the module, or NULL if the module is not found.
-// [onComplete] an optional callback that will be called once Wren is done with the result.
+// El resultado de una llamada a loadModuleFn.
+// [source] es el código fuente del módulo, o NULL si no se encontró.
+// [onComplete] es una devolución de llamada opcional que se ejecutará cuando
+// Wren termine con el resultado.
 typedef struct WrenLoadModuleResult
 {
   const char* source;
@@ -90,183 +92,187 @@ typedef struct WrenLoadModuleResult
   void* userData;
 } WrenLoadModuleResult;
 
-// Loads and returns the source code for the module [name].
+// Carga y devuelve el código fuente del módulo [name].
 typedef WrenLoadModuleResult (*WrenLoadModuleFn)(WrenVM* vm, const char* name);
 
-// Returns a pointer to a foreign method on [className] in [module] with
-// [signature].
+// Devuelve un puntero a un método externo en [className] del módulo [module]
+// con la firma [signature].
 typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM* vm,
     const char* module, const char* className, bool isStatic,
     const char* signature);
 
-// Displays a string of text to the user.
+// Muestra una cadena de texto al usuario.
 typedef void (*WrenWriteFn)(WrenVM* vm, const char* text);
 
 typedef enum
 {
-  // A syntax or resolution error detected at compile time.
+  // Un error de sintaxis o de resolución detectado en tiempo de compilación.
   WREN_ERROR_COMPILE,
 
-  // The error message for a runtime error.
+  // El mensaje de error para un error de ejecución.
   WREN_ERROR_RUNTIME,
 
-  // One entry of a runtime error's stack trace.
+  // Una entrada del seguimiento de pila de un error en tiempo de ejecución.
   WREN_ERROR_STACK_TRACE
 } WrenErrorType;
 
-// Reports an error to the user.
+// Informa de un error al usuario.
 //
-// An error detected during compile time is reported by calling this once with
-// [type] `WREN_ERROR_COMPILE`, the resolved name of the [module] and [line]
-// where the error occurs, and the compiler's error [message].
+// Un error detectado durante la compilación se informa llamando a esto una vez
+// con [type] `WREN_ERROR_COMPILE`, el nombre resuelto del [module] y la [line]
+// donde ocurre el error, y el [message] del compilador.
 //
-// A runtime error is reported by calling this once with [type]
-// `WREN_ERROR_RUNTIME`, no [module] or [line], and the runtime error's
-// [message]. After that, a series of [type] `WREN_ERROR_STACK_TRACE` calls are
-// made for each line in the stack trace. Each of those has the resolved
-// [module] and [line] where the method or function is defined and [message] is
-// the name of the method or function.
+// Un error de ejecución se informa llamando a esto una vez con [type]
+// `WREN_ERROR_RUNTIME`, sin [module] ni [line], y el [message] del error de
+// ejecución. Después, se realizan varias llamadas de tipo
+// `WREN_ERROR_STACK_TRACE` para cada línea del seguimiento de pila. Cada una de
+// esas tiene el [module] y la [line] resueltos donde se define el método o la
+// función y [message] es el nombre del método o la función.
 typedef void (*WrenErrorFn)(
     WrenVM* vm, WrenErrorType type, const char* module, int line,
     const char* message);
 
 typedef struct
 {
-  // The callback invoked when the foreign object is created.
+  // La devolución de llamada invocada cuando se crea el objeto externo.
   //
-  // This must be provided. Inside the body of this, it must call
-  // [wrenSetSlotNewForeign()] exactly once.
+  // Debe proporcionarse. Dentro del cuerpo de esta, debe llamar a
+  // [wrenSetSlotNewForeign()] exactamente una vez.
   WrenForeignMethodFn allocate;
 
-  // The callback invoked when the garbage collector is about to collect a
-  // foreign object's memory.
+  // La devolución de llamada invocada cuando el recolector de basura está a
+  // punto de recopilar la memoria del objeto externo.
   //
-  // This may be `NULL` if the foreign class does not need to finalize.
+  // Puede ser `NULL` si la clase externa no necesita finalización.
   WrenFinalizerFn finalize;
 } WrenForeignClassMethods;
 
-// Returns a pair of pointers to the foreign methods used to allocate and
-// finalize the data for instances of [className] in resolved [module].
+// Devuelve un par de punteros a los métodos externos utilizados para asignar y
+// finalizar los datos de instancias de [className] en el [module] resuelto.
 typedef WrenForeignClassMethods (*WrenBindForeignClassFn)(
     WrenVM* vm, const char* module, const char* className);
 
 typedef struct
 {
-  // The callback Wren will use to allocate, reallocate, and deallocate memory.
+  // La devolución de llamada que Wren usará para asignar, reasignar y liberar
+  // memoria.
   //
-  // If `NULL`, defaults to a built-in function that uses `realloc` and `free`.
+  // Si es `NULL`, usa una función incorporada que usa `realloc` y `free`.
   WrenReallocateFn reallocateFn;
 
-  // The callback Wren uses to resolve a module name.
+  // La devolución de llamada que Wren usa para resolver un nombre de módulo.
   //
-  // Some host applications may wish to support "relative" imports, where the
-  // meaning of an import string depends on the module that contains it. To
-  // support that without baking any policy into Wren itself, the VM gives the
-  // host a chance to resolve an import string.
+  // Algunas aplicaciones anfitrionas pueden querer admitir importaciones
+  // "relativas", donde el significado de una cadena de importación depende del
+  // módulo que la contiene. Para admitir eso sin introducir ninguna política en
+  // Wren, la VM da al anfitrión la oportunidad de resolver una importación.
   //
-  // Before an import is loaded, it calls this, passing in the name of the
-  // module that contains the import and the import string. The host app can
-  // look at both of those and produce a new "canonical" string that uniquely
-  // identifies the module. This string is then used as the name of the module
-  // going forward. It is what is passed to [loadModuleFn], how duplicate
-  // imports of the same module are detected, and how the module is reported in
-  // stack traces.
+  // Antes de cargar una importación, llama a esto, pasando el nombre del módulo
+  // que contiene la importación y la cadena de importación. La aplicación
+  // anfitriona puede mirar ambos y producir una cadena "canónica" nueva que
+  // identifique de forma única el módulo. Esta cadena se usa como nombre del
+  // módulo a partir de ese momento. Es la que se pasa a [loadModuleFn], cómo se
+  // detectan importaciones duplicadas del mismo módulo y cómo se informa del
+  // módulo en las trazas de la pila.
   //
-  // If you leave this function NULL, then the original import string is
-  // treated as the resolved string.
+  // Si dejas esta función en NULL, entonces la cadena de importación original se
+  // trata como la cadena resuelta.
   //
-  // If an import cannot be resolved by the embedder, it should return NULL and
-  // Wren will report that as a runtime error.
+  // Si una importación no puede resolverse por el embebedor, debe devolver NULL
+  // y Wren reportará eso como un error de ejecución.
   //
-  // Wren will take ownership of the string you return and free it for you, so
-  // it should be allocated using the same allocation function you provide
-  // above.
+  // Wren se hará cargo de la cadena que devuelvas y la liberará por ti, así
+  // que debe asignarse usando la misma función de asignación que proporciones
+  // arriba.
   WrenResolveModuleFn resolveModuleFn;
 
-  // The callback Wren uses to load a module.
+  // La devolución de llamada que Wren usa para cargar un módulo.
   //
-  // Since Wren does not talk directly to the file system, it relies on the
-  // embedder to physically locate and read the source code for a module. The
-  // first time an import appears, Wren will call this and pass in the name of
-  // the module being imported. The method will return a result, which contains
-  // the source code for that module. Memory for the source is owned by the 
-  // host application, and can be freed using the onComplete callback.
+  // Como Wren no habla directamente con el sistema de archivos, depende del
+  // embebedor para localizar y leer físicamente el código fuente de un módulo.
+  // La primera vez que aparece una importación, Wren la llamará y le pasará el
+  // nombre del módulo que se importa. El método devolverá un resultado, que
+  // contiene el código fuente de ese módulo. La memoria del código fuente es
+  // propiedad de la aplicación anfitriona y puede liberarse utilizando la
+  // devolución de llamada onComplete.
   //
-  // This will only be called once for any given module name. Wren caches the
-  // result internally so subsequent imports of the same module will use the
-  // previous source and not call this.
+  // Esto solo se llamará una vez para cualquier nombre de módulo. Wren almacena
+  // en caché el resultado internamente, por lo que las importaciones posteriores
+  // del mismo módulo reutilizarán el código fuente anterior y no llamarán a
+  // esto.
   //
-  // If a module with the given name could not be found by the embedder, it
-  // should return NULL and Wren will report that as a runtime error.
+  // Si un módulo con el nombre dado no se encontró por el embebedor, debe
+  // devolver NULL y Wren informará de un error de ejecución.
   WrenLoadModuleFn loadModuleFn;
 
-  // The callback Wren uses to find a foreign method and bind it to a class.
+  // La devolución de llamada que Wren usa para encontrar un método externo y
+  // enlazarlo a una clase.
   //
-  // When a foreign method is declared in a class, this will be called with the
-  // foreign method's module, class, and signature when the class body is
-  // executed. It should return a pointer to the foreign function that will be
-  // bound to that method.
+  // Cuando se declara un método externo en una clase, esto se llamará con el
+  // módulo, la clase y la firma del método externo cuando se ejecute el cuerpo
+  // de la clase. Debe devolver un puntero a la función externa que se enlazará
+  // a ese método.
   //
-  // If the foreign function could not be found, this should return NULL and
-  // Wren will report it as runtime error.
+  // Si la función externa no se encontró, esto debe devolver NULL y Wren la
+  // reportará como error en tiempo de ejecución.
   WrenBindForeignMethodFn bindForeignMethodFn;
 
-  // The callback Wren uses to find a foreign class and get its foreign methods.
+  // La devolución de llamada que Wren usa para encontrar una clase externa y
+  // obtener sus métodos externos.
   //
-  // When a foreign class is declared, this will be called with the class's
-  // module and name when the class body is executed. It should return the
-  // foreign functions uses to allocate and (optionally) finalize the bytes
-  // stored in the foreign object when an instance is created.
+  // Cuando una clase externa se declara, esto se llamará con el módulo y el
+  // nombre de la clase cuando se ejecute el cuerpo de la clase. Debe devolver
+  // las funciones externas que se usan para asignar y (opcionalmente) finalizar
+  // los bytes almacenados en el objeto externo cuando se crea una instancia.
   WrenBindForeignClassFn bindForeignClassFn;
 
-  // The callback Wren uses to display text when `System.print()` or the other
-  // related functions are called.
+  // La devolución de llamada que Wren usa para mostrar texto cuando
+  // `System.print()` u otras funciones relacionadas se invocan.
   //
-  // If this is `NULL`, Wren discards any printed text.
+  // Si esto es `NULL`, Wren descarta cualquier texto impreso.
   WrenWriteFn writeFn;
 
-  // The callback Wren uses to report errors.
+  // La devolución de llamada que Wren usa para informar errores.
   //
-  // When an error occurs, this will be called with the module name, line
-  // number, and an error message. If this is `NULL`, Wren doesn't report any
-  // errors.
+  // Cuando ocurre un error, esto se llamará con el nombre del módulo, el número
+  // de línea y un mensaje de error. Si esto es `NULL`, Wren no informa de
+  // errores.
   WrenErrorFn errorFn;
 
-  // The number of bytes Wren will allocate before triggering the first garbage
-  // collection.
+  // El número de bytes que Wren asignará antes de desencadenar la primera
+  // recolección de basura.
   //
-  // If zero, defaults to 10MB.
+  // Si es cero, usa 10MB por defecto.
   size_t initialHeapSize;
 
-  // After a collection occurs, the threshold for the next collection is
-  // determined based on the number of bytes remaining in use. This allows Wren
-  // to shrink its memory usage automatically after reclaiming a large amount
-  // of memory.
+  // Después de que ocurra una recolección, el umbral para la siguiente se
+  // determina en función del número de bytes restantes en uso. Esto permite que
+  // Wren reduzca automáticamente su uso de memoria después de reclamar una gran
+  // cantidad de memoria.
   //
-  // This can be used to ensure that the heap does not get too small, which can
-  // in turn lead to a large number of collections afterwards as the heap grows
-  // back to a usable size.
+  // Esto puede usarse para asegurar que el heap no se vuelva demasiado pequeño,
+  // lo que a su vez puede provocar un gran número de recolecciones después de
+  // que el heap vuelva a crecer hasta un tamaño útil.
   //
-  // If zero, defaults to 1MB.
+  // Si es cero, usa 1MB por defecto.
   size_t minHeapSize;
 
-  // Wren will resize the heap automatically as the number of bytes
-  // remaining in use after a collection changes. This number determines the
-  // amount of additional memory Wren will use after a collection, as a
-  // percentage of the current heap size.
+  // Wren redimensionará el heap automáticamente según cambie el número de bytes
+  // que quedan en uso después de una recolección. Este número determina la
+  // cantidad de memoria adicional que Wren usará después de una recolección, en
+  // porcentaje del tamaño actual del heap.
   //
-  // For example, say that this is 50. After a garbage collection, when there
-  // are 400 bytes of memory still in use, the next collection will be triggered
-  // after a total of 600 bytes are allocated (including the 400 already in
-  // use.)
+  // Por ejemplo, supongamos que esto es 50. Después de una recolección, cuando
+  // queden 400 bytes de memoria en uso, la siguiente recolección se disparará
+  // después de asignar un total de 600 bytes (incluidos los 400 ya en uso).
   //
-  // Setting this to a smaller number wastes less memory, but triggers more
-  // frequent garbage collections.
+  // Establecerlo a un valor más pequeño desperdicia menos memoria, pero activa
+  // recolecciones más frecuentes.
   //
-  // If zero, defaults to 50.
+  // Si es cero, usa 50 por defecto.
   int heapGrowthPercent;
 
-  // User-defined data associated with the VM.
+  // Datos definidos por el usuario asociados a la VM.
   void* userData;
 
 } WrenConfiguration;
@@ -278,10 +284,10 @@ typedef enum
   WREN_RESULT_RUNTIME_ERROR
 } WrenInterpretResult;
 
-// The type of an object stored in a slot.
+// El tipo de un objeto almacenado en una ranura.
 //
-// This is not necessarily the object's *class*, but instead its low level
-// representation type.
+// Esto no es necesariamente la *clase* del objeto, sino su tipo de
+// representación de bajo nivel.
 typedef enum
 {
   WREN_TYPE_BOOL,
@@ -292,263 +298,271 @@ typedef enum
   WREN_TYPE_NULL,
   WREN_TYPE_STRING,
 
-  // The object is of a type that isn't accessible by the C API.
+  // El objeto es de un tipo que no es accesible por la API de C.
   WREN_TYPE_UNKNOWN
 } WrenType;
 
-// Get the current wren version number.
+// Obtiene el número de versión actual de Wren.
 //
-// Can be used to range checks over versions.
+// Se puede usar para comprobar rangos de versiones.
 WREN_API int wrenGetVersionNumber();
 
-// Initializes [configuration] with all of its default values.
+// Inicializa [configuration] con todos sus valores predeterminados.
 //
-// Call this before setting the particular fields you care about.
+// Llamar a esto antes de establecer los campos particulares que te interesen.
 WREN_API void wrenInitConfiguration(WrenConfiguration* configuration);
 
-// Creates a new Wren virtual machine using the given [configuration]. Wren
-// will copy the configuration data, so the argument passed to this can be
-// freed after calling this. If [configuration] is `NULL`, uses a default
-// configuration.
+// Crea una nueva máquina virtual de Wren usando la [configuration] dada. Wren
+// copiará los datos de configuración, así que el argumento pasado a esta
+// función puede liberarse después de llamarla. Si [configuration] es `NULL`,
+// usa una configuración predeterminada.
 WREN_API WrenVM* wrenNewVM(WrenConfiguration* configuration);
 
-// Disposes of all resources is use by [vm], which was previously created by a
-// call to [wrenNewVM].
+// Libera todos los recursos en uso por [vm], que fueron creados previamente por
+// una llamada a [wrenNewVM].
 WREN_API void wrenFreeVM(WrenVM* vm);
 
-// Immediately run the garbage collector to free unused memory.
+// Ejecuta de inmediato el recolector de basura para liberar memoria no usada.
 WREN_API void wrenCollectGarbage(WrenVM* vm);
 
-// Runs [source], a string of Wren source code in a new fiber in [vm] in the
-// context of resolved [module].
+// Ejecuta [source], una cadena de código fuente de Wren en una nueva fibra en
+// [vm] en el contexto del [module] resuelto.
 WREN_API WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
-                                  const char* source);
+                                   const char* source);
 
-// Creates a handle that can be used to invoke a method with [signature] on
-// using a receiver and arguments that are set up on the stack.
+// Crea un identificador que puede usarse para invocar un método con [signature]
+// sobre un receptor y argumentos que se preparan en la pila.
 //
-// This handle can be used repeatedly to directly invoke that method from C
-// code using [wrenCall].
+// Este identificador puede usarse repetidamente para invocar directamente ese
+// método desde código C usando [wrenCall].
 //
-// When you are done with this handle, it must be released using
+// Cuando termines con este identificador, debe liberarse usando
 // [wrenReleaseHandle].
 WREN_API WrenHandle* wrenMakeCallHandle(WrenVM* vm, const char* signature);
 
-// Calls [method], using the receiver and arguments previously set up on the
-// stack.
+// Llama a [method], usando el receptor y los argumentos previamente configurados
+// en la pila.
 //
-// [method] must have been created by a call to [wrenMakeCallHandle]. The
-// arguments to the method must be already on the stack. The receiver should be
-// in slot 0 with the remaining arguments following it, in order. It is an
-// error if the number of arguments provided does not match the method's
-// signature.
+// [method] debe haber sido creado por una llamada a [wrenMakeCallHandle]. Los
+// argumentos del método deben estar ya en la pila. El receptor debe estar en la
+// ranura 0 y los argumentos restantes después de este, en orden. Es un error si
+// el número de argumentos proporcionados no coincide con la firma del método.
 //
-// After this returns, you can access the return value from slot 0 on the stack.
+// Después de que esto devuelve, puedes acceder al valor de retorno desde la
+// ranura 0 en la pila.
 WREN_API WrenInterpretResult wrenCall(WrenVM* vm, WrenHandle* method);
 
-// Releases the reference stored in [handle]. After calling this, [handle] can
-// no longer be used.
+// Libera la referencia almacenada en [handle]. Después de llamar a esto,
+// [handle] ya no puede usarse.
 WREN_API void wrenReleaseHandle(WrenVM* vm, WrenHandle* handle);
 
-// The following functions are intended to be called from foreign methods or
-// finalizers. The interface Wren provides to a foreign method is like a
-// register machine: you are given a numbered array of slots that values can be
-// read from and written to. Values always live in a slot (unless explicitly
-// captured using wrenGetSlotHandle(), which ensures the garbage collector can
-// find them.
+// Las siguientes funciones están pensadas para ser llamadas desde métodos o
+// finalizadores externos. La interfaz que Wren proporciona a un método externo
+// se parece a una máquina de registros: se te da una matriz numerada de ranuras
+// en las que se pueden leer y escribir valores. Los valores siempre viven en una
+// ranura (a menos que se capturen explícitamente usando
+// wrenGetSlotHandle(), que asegura que el recolector de basura pueda
+// encontrarlos).
 //
-// When your foreign function is called, you are given one slot for the receiver
-// and each argument to the method. The receiver is in slot 0 and the arguments
-// are in increasingly numbered slots after that. You are free to read and
-// write to those slots as you want. If you want more slots to use as scratch
-// space, you can call wrenEnsureSlots() to add more.
+// Cuando se llama a tu función externa, se te da una ranura para el receptor y
+// cada argumento del método. El receptor está en la ranura 0 y los argumentos
+// están en ranuras numeradas cada vez mayores después de esta. Eres libre de
+// leer y escribir en esas ranuras como quieras. Si necesitas más ranuras para
+// usar como espacio de trabajo, puedes llamar a wrenEnsureSlots() para añadir
+// más.
 //
-// When your function returns, every slot except slot zero is discarded and the
-// value in slot zero is used as the return value of the method. If you don't
-// store a return value in that slot yourself, it will retain its previous
-// value, the receiver.
+// Cuando tu función devuelve, cada ranura excepto la cero se descarta y el
+// valor de la ranura cero se usa como valor de retorno del método. Si no
+// almacenas un valor de retorno en esa ranura tú mismo, conservará su valor
+// anterior, el receptor.
 //
-// While Wren is dynamically typed, C is not. This means the C interface has to
-// support the various types of primitive values a Wren variable can hold: bool,
-// double, string, etc. If we supported this for every operation in the C API,
-// there would be a combinatorial explosion of functions, like "get a
-// double-valued element from a list", "insert a string key and double value
-// into a map", etc.
+// Aunque Wren es dinámicamente tipado, C no lo es. Esto significa que la
+// interfaz C tiene que soportar los distintos tipos de valores primitivos que
+// puede contener una variable de Wren: booleano, doble, cadena, etc. Si
+// soportáramos esto para cada operación en la API de C, habría una explosión
+// combinatoria de funciones, como "obtener un elemento dobleado de una lista",
+// "insertar una clave de cadena y un valor doble en un mapa", etc.
 //
-// To avoid that, the only way to convert to and from a raw C value is by going
-// into and out of a slot. All other functions work with values already in a
-// slot. So, to add an element to a list, you put the list in one slot, and the
-// element in another. Then there is a single API function wrenInsertInList()
-// that takes the element out of that slot and puts it into the list.
+// Para evitar eso, la única forma de convertir a y desde un valor C bruto es
+// entrar y salir de una ranura. Todas las demás funciones trabajan con valores
+// ya en una ranura. Por lo tanto, para añadir un elemento a una lista, pones la
+// lista en una ranura y el elemento en otra. Luego hay una sola función de API,
+// wrenInsertInList(), que toma el elemento de esa ranura y lo coloca en la
+// lista.
 //
-// The goal of this API is to be easy to use while not compromising performance.
-// The latter means it does not do type or bounds checking at runtime except
-// using assertions which are generally removed from release builds. C is an
-// unsafe language, so it's up to you to be careful to use it correctly. In
-// return, you get a very fast FFI.
+// El objetivo de esta API es ser fácil de usar sin comprometer el rendimiento.
+// Esto último significa que no hace comprobaciones de tipos ni de límites en
+// tiempo de ejecución, excepto mediante aserciones que generalmente se eliminan
+// en compilaciones de lanzamiento. C es un lenguaje inseguro, por lo que te
+// corresponde tener cuidado al usarlo correctamente. A cambio, obtienes una FFI
+// muy rápida.
 
-// Returns the number of slots available to the current foreign method.
+// Devuelve el número de ranuras disponibles para el método externo actual.
 WREN_API int wrenGetSlotCount(WrenVM* vm);
 
-// Ensures that the foreign method stack has at least [numSlots] available for
-// use, growing the stack if needed.
+// Asegura que la pila del método externo tenga al menos [numSlots] disponibles
+// para su uso, creciendo la pila si es necesario.
 //
-// Does not shrink the stack if it has more than enough slots.
+// No encoge la pila si tiene más de suficientes ranuras.
 //
-// It is an error to call this from a finalizer.
+// Es un error llamar a esto desde un finalizador.
 WREN_API void wrenEnsureSlots(WrenVM* vm, int numSlots);
 
-// Gets the type of the object in [slot].
+// Obtiene el tipo del objeto en [slot].
 WREN_API WrenType wrenGetSlotType(WrenVM* vm, int slot);
 
-// Reads a boolean value from [slot].
+// Lee un valor booleano de [slot].
 //
-// It is an error to call this if the slot does not contain a boolean value.
+// Es un error llamar a esto si la ranura no contiene un valor booleano.
 WREN_API bool wrenGetSlotBool(WrenVM* vm, int slot);
 
-// Reads a byte array from [slot].
+// Lee una matriz de bytes de [slot].
 //
-// The memory for the returned string is owned by Wren. You can inspect it
-// while in your foreign method, but cannot keep a pointer to it after the
-// function returns, since the garbage collector may reclaim it.
+// La memoria de la cadena devuelta es propiedad de Wren. Puedes inspeccionarla
+// mientras estés en tu método externo, pero no puedes conservar un puntero a
+// ella después de que la función devuelva, porque el recolector de basura puede
+// reclamarla.
 //
-// Returns a pointer to the first byte of the array and fill [length] with the
-// number of bytes in the array.
+// Devuelve un puntero al primer byte de la matriz y llena [length] con el
+// número de bytes de la matriz.
 //
-// It is an error to call this if the slot does not contain a string.
+// Es un error llamar a esto si la ranura no contiene una cadena.
 WREN_API const char* wrenGetSlotBytes(WrenVM* vm, int slot, int* length);
 
-// Reads a number from [slot].
+// Lee un número de [slot].
 //
-// It is an error to call this if the slot does not contain a number.
+// Es un error llamar a esto si la ranura no contiene un número.
 WREN_API double wrenGetSlotDouble(WrenVM* vm, int slot);
 
-// Reads a foreign object from [slot] and returns a pointer to the foreign data
-// stored with it.
+// Lee un objeto externo de [slot] y devuelve un puntero a los datos
+// externos almacenados con él.
 //
-// It is an error to call this if the slot does not contain an instance of a
-// foreign class.
+// Es un error llamar a esto si la ranura no contiene una instancia de una
+// clase externa.
 WREN_API void* wrenGetSlotForeign(WrenVM* vm, int slot);
 
-// Reads a string from [slot].
+// Lee una cadena de [slot].
 //
-// The memory for the returned string is owned by Wren. You can inspect it
-// while in your foreign method, but cannot keep a pointer to it after the
-// function returns, since the garbage collector may reclaim it.
+// La memoria de la cadena devuelta es propiedad de Wren. Puedes inspeccionarla
+// mientras estés en tu método externo, pero no puedes conservar un puntero a
+// ella después de que la función devuelva, porque el recolector de basura puede
+// reclamarla.
 //
-// It is an error to call this if the slot does not contain a string.
+// Es un error llamar a esto si la ranura no contiene una cadena.
 WREN_API const char* wrenGetSlotString(WrenVM* vm, int slot);
 
-// Creates a handle for the value stored in [slot].
+// Crea un identificador para el valor almacenado en [slot].
 //
-// This will prevent the object that is referred to from being garbage collected
-// until the handle is released by calling [wrenReleaseHandle()].
+// Esto evitará que el objeto al que se hace referencia sea recolectado por la
+// basura hasta que se libere el identificador llamando a [wrenReleaseHandle()].
 WREN_API WrenHandle* wrenGetSlotHandle(WrenVM* vm, int slot);
 
-// Stores the boolean [value] in [slot].
+// Almacena el booleano [value] en [slot].
 WREN_API void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
 
-// Stores the array [length] of [bytes] in [slot].
+// Almacena la matriz [length] de [bytes] en [slot].
 //
-// The bytes are copied to a new string within Wren's heap, so you can free
-// memory used by them after this is called.
+// Los bytes se copian a una nueva cadena dentro del heap de Wren, así que
+// puedes liberar la memoria usada por ellos después de llamar a esto.
 WREN_API void wrenSetSlotBytes(WrenVM* vm, int slot, const char* bytes, size_t length);
 
-// Stores the numeric [value] in [slot].
+// Almacena el valor numérico [value] en [slot].
 WREN_API void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
 
-// Creates a new instance of the foreign class stored in [classSlot] with [size]
-// bytes of raw storage and places the resulting object in [slot].
+// Crea una nueva instancia de la clase externa almacenada en [classSlot] con
+// [size] bytes de almacenamiento sin procesar y coloca el objeto resultante en
+// [slot].
 //
-// This does not invoke the foreign class's constructor on the new instance. If
-// you need that to happen, call the constructor from Wren, which will then
-// call the allocator foreign method. In there, call this to create the object
-// and then the constructor will be invoked when the allocator returns.
+// Esto no invoca el constructor de la clase externa en la nueva instancia. Si
+// necesitas que ocurra, llama al constructor desde Wren, que entonces llamará
+// al método externo del asignador. En él, llama a esto para crear el objeto y
+// luego el constructor se invocará cuando el asignador devuelva.
 //
-// Returns a pointer to the foreign object's data.
+// Devuelve un puntero a los datos del objeto externo.
 WREN_API void* wrenSetSlotNewForeign(WrenVM* vm, int slot, int classSlot, size_t size);
 
-// Stores a new empty list in [slot].
+// Almacena una nueva lista vacía en [slot].
 WREN_API void wrenSetSlotNewList(WrenVM* vm, int slot);
 
-// Stores a new empty map in [slot].
+// Almacena un nuevo mapa vacío en [slot].
 WREN_API void wrenSetSlotNewMap(WrenVM* vm, int slot);
 
-// Stores null in [slot].
+// Almacena null en [slot].
 WREN_API void wrenSetSlotNull(WrenVM* vm, int slot);
 
-// Stores the string [text] in [slot].
+// Almacena la cadena [text] en [slot].
 //
-// The [text] is copied to a new string within Wren's heap, so you can free
-// memory used by it after this is called. The length is calculated using
-// [strlen()]. If the string may contain any null bytes in the middle, then you
-// should use [wrenSetSlotBytes()] instead.
+// El [text] se copia a una nueva cadena dentro del heap de Wren, así que puedes
+// liberar la memoria usada por él después de llamar a esto. La longitud se
+// calcula usando [strlen()]. Si la cadena puede contener bytes nulos en el
+// medio, entonces debes usar [wrenSetSlotBytes()] en su lugar.
 WREN_API void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
 
-// Stores the value captured in [handle] in [slot].
+// Almacena el valor capturado en [handle] en [slot].
 //
-// This does not release the handle for the value.
+// Esto no libera el identificador del valor.
 WREN_API void wrenSetSlotHandle(WrenVM* vm, int slot, WrenHandle* handle);
 
-// Returns the number of elements in the list stored in [slot].
+// Devuelve el número de elementos en la lista almacenada en [slot].
 WREN_API int wrenGetListCount(WrenVM* vm, int slot);
 
-// Reads element [index] from the list in [listSlot] and stores it in
+// Lee el elemento [index] de la lista en [listSlot] y lo almacena en
 // [elementSlot].
 WREN_API void wrenGetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 
-// Sets the value stored at [index] in the list at [listSlot], 
-// to the value from [elementSlot]. 
+// Establece el valor almacenado en [index] en la lista en [listSlot],
+// al valor de [elementSlot].
 WREN_API void wrenSetListElement(WrenVM* vm, int listSlot, int index, int elementSlot);
 
-// Takes the value stored at [elementSlot] and inserts it into the list stored
-// at [listSlot] at [index].
+// Toma el valor almacenado en [elementSlot] e insértalo en la lista almacenada
+// en [listSlot] en [index].
 //
-// As in Wren, negative indexes can be used to insert from the end. To append
-// an element, use `-1` for the index.
+// Como en Wren, se pueden usar índices negativos para insertar desde el final.
+// Para añadir un elemento, usa `-1` como índice.
 WREN_API void wrenInsertInList(WrenVM* vm, int listSlot, int index, int elementSlot);
 
-// Returns the number of entries in the map stored in [slot].
+// Devuelve el número de entradas en el mapa almacenado en [slot].
 WREN_API int wrenGetMapCount(WrenVM* vm, int slot);
 
-// Returns true if the key in [keySlot] is found in the map placed in [mapSlot].
+// Devuelve true si la clave en [keySlot] se encuentra en el mapa colocado en
+// [mapSlot].
 WREN_API bool wrenGetMapContainsKey(WrenVM* vm, int mapSlot, int keySlot);
 
-// Retrieves a value with the key in [keySlot] from the map in [mapSlot] and
-// stores it in [valueSlot].
+// Recupera un valor con la clave en [keySlot] del mapa en [mapSlot] y lo
+// almacena en [valueSlot].
 WREN_API void wrenGetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
 
-// Takes the value stored at [valueSlot] and inserts it into the map stored
-// at [mapSlot] with key [keySlot].
+// Toma el valor almacenado en [valueSlot] y lo inserta en el mapa almacenado en
+// [mapSlot] con la clave [keySlot].
 WREN_API void wrenSetMapValue(WrenVM* vm, int mapSlot, int keySlot, int valueSlot);
 
-// Removes a value from the map in [mapSlot], with the key from [keySlot],
-// and place it in [removedValueSlot]. If not found, [removedValueSlot] is
-// set to null, the same behaviour as the Wren Map API.
+// Elimina un valor del mapa en [mapSlot], con la clave de [keySlot],
+// y lo coloca en [removedValueSlot]. Si no se encuentra, [removedValueSlot] se
+// establece en null, el mismo comportamiento que la API de Map de Wren.
 WREN_API void wrenRemoveMapValue(WrenVM* vm, int mapSlot, int keySlot,
-                        int removedValueSlot);
+                         int removedValueSlot);
 
-// Looks up the top level variable with [name] in resolved [module] and stores
-// it in [slot].
+// Busca la variable de nivel superior con [name] en el [module] resuelto y la
+// almacena en [slot].
 WREN_API void wrenGetVariable(WrenVM* vm, const char* module, const char* name,
-                     int slot);
+                      int slot);
 
-// Looks up the top level variable with [name] in resolved [module], 
-// returns false if not found. The module must be imported at the time, 
-// use wrenHasModule to ensure that before calling.
+// Busca la variable de nivel superior con [name] en el [module] resuelto,
+// devuelve false si no se encuentra. El módulo debe estar importado en ese
+// momento; usa wrenHasModule para asegurarte antes de llamar.
 WREN_API bool wrenHasVariable(WrenVM* vm, const char* module, const char* name);
 
-// Returns true if [module] has been imported/resolved before, false if not.
+// Devuelve true si [module] se ha importado/resuelto antes, false si no.
 WREN_API bool wrenHasModule(WrenVM* vm, const char* module);
 
-// Sets the current fiber to be aborted, and uses the value in [slot] as the
-// runtime error object.
+// Establece la fibra actual para que se aborta y usa el valor en [slot] como
+// el objeto de error de ejecución.
 WREN_API void wrenAbortFiber(WrenVM* vm, int slot);
 
-// Returns the user data associated with the WrenVM.
+// Devuelve los datos de usuario asociados a la WrenVM.
 WREN_API void* wrenGetUserData(WrenVM* vm);
 
-// Sets user data associated with the WrenVM.
+// Establece los datos de usuario asociados a la WrenVM.
 WREN_API void wrenSetUserData(WrenVM* vm, void* userData);
 
 #endif

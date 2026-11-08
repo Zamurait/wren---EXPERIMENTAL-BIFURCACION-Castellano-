@@ -13,11 +13,11 @@ void metaCompile(WrenVM* vm)
   bool isExpression = wrenGetSlotBool(vm, 2);
   bool printErrors = wrenGetSlotBool(vm, 3);
 
-  // TODO: Allow passing in module?
-  // Look up the module surrounding the callsite. This is brittle. The -2 walks
-  // up the callstack assuming that the meta module has one level of
-  // indirection before hitting the user's code. Any change to meta may require
-  // this constant to be tweaked.
+  // TODO: ¿Permitir pasar un módulo?
+  // Busca el módulo que rodea el punto de llamada. Esto es frágil. El -2
+  // recorre la pila de llamadas suponiendo que el módulo meta tiene un nivel de
+  // indirección antes de llegar al código del usuario. Cualquier cambio en meta
+  // podría requerir ajustar esta constante.
   ObjFiber* currentFiber = vm->fiber;
   ObjFn* fn = currentFiber->frames[currentFiber->numFrames - 2].closure->fn;
   ObjString* module = fn->module->name;
@@ -25,8 +25,8 @@ void metaCompile(WrenVM* vm)
   ObjClosure* closure = wrenCompileSource(vm, module->value, source,
                                           isExpression, printErrors);
   
-  // Return the result. We can't use the public API for this since we have a
-  // bare ObjClosure*.
+  // Devuelve el resultado. No podemos usar la API pública para esto porque
+  // tenemos un ObjClosure* sin envolver.
   if (closure == NULL)
   {
     vm->apiStack[0] = NULL_VAL;
@@ -52,8 +52,8 @@ void metaGetModuleVariables(WrenVM* vm)
   ObjList* names = wrenNewList(vm, module->variableNames.count);
   vm->apiStack[0] = OBJ_VAL(names);
 
-  // Initialize the elements to null in case a collection happens when we
-  // allocate the strings below.
+  // Inicializa los elementos con null por si ocurre una recolección al asignar
+  // las cadenas de abajo.
   for (int i = 0; i < names->elements.count; i++)
   {
     names->elements.data[i] = NULL_VAL;
@@ -75,7 +75,7 @@ WrenForeignMethodFn wrenMetaBindForeignMethod(WrenVM* vm,
                                               bool isStatic,
                                               const char* signature)
 {
-  // There is only one foreign method in the meta module.
+  // Solo hay un método externo en el módulo meta.
   ASSERT(strcmp(className, "Meta") == 0, "Should be in Meta class.");
   ASSERT(isStatic, "Should be static.");
   
