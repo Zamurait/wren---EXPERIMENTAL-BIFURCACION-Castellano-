@@ -4,15 +4,14 @@
 #include "wren.h"
 #include "wren_common.h"
 
-// Reusable data structures and other utility functions.
+// Estructuras de datos reutilizables y otras funciones auxiliares.
 
-// Forward declare this here to break a cycle between wren_utils.h and
-// wren_value.h.
+// Declara esto aquí para romper un ciclo entre wren_utils.h y wren_value.h.
 typedef struct sObjString ObjString;
 
-// We need buffers of a few different types. To avoid lots of casting between
-// void* and back, we'll use the preprocessor as a poor man's generics and let
-// it generate a few type-specific ones.
+// Necesitamos buffers de varios tipos. Para evitar muchas conversiones entre
+// void* y otros tipos, usaremos el preprocesador como un "genérico pobre" y lo
+// haremos generar unos pocos buffers específicos por tipo.
 #define DECLARE_BUFFER(name, type)                                             \
     typedef struct                                                             \
     {                                                                          \
@@ -26,7 +25,7 @@ typedef struct sObjString ObjString;
                                 int count);                                    \
     void wren##name##BufferWrite(WrenVM* vm, name##Buffer* buffer, type data)
 
-// This should be used once for each type instantiation, somewhere in a .c file.
+// Esto debe usarse una vez para cada instanciación de tipo, en algún archivo .c.
 #define DEFINE_BUFFER(name, type)                                              \
     void wren##name##BufferInit(name##Buffer* buffer)                          \
     {                                                                          \
@@ -67,60 +66,61 @@ DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, ObjString*);
 
-// TODO: Change this to use a map.
+// TODO: Cambiar esto para usar un mapa.
 typedef StringBuffer SymbolTable;
 
-// Initializes the symbol table.
+// Inicializa la tabla de símbolos.
 void wrenSymbolTableInit(SymbolTable* symbols);
 
-// Frees all dynamically allocated memory used by the symbol table, but not the
-// SymbolTable itself.
+// Libera toda la memoria asignada dinámicamente usada por la tabla de símbolos,
+// pero no la propia SymbolTable.
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols);
 
-// Adds name to the symbol table. Returns the index of it in the table.
+// Añade name a la tabla de símbolos. Devuelve el índice en la tabla.
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols,
-                       const char* name, size_t length);
+                        const char* name, size_t length);
 
-// Adds name to the symbol table. Returns the index of it in the table. Will
-// use an existing symbol if already present.
+// Añade name a la tabla de símbolos. Devuelve el índice en la tabla. Usará un
+// símbolo existente si ya está presente.
 int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols,
-                          const char* name, size_t length);
+                           const char* name, size_t length);
 
-// Looks up name in the symbol table. Returns its index if found or -1 if not.
+// Busca name en la tabla de símbolos. Devuelve su índice si se encuentra o -1 si
+// no.
 int wrenSymbolTableFind(const SymbolTable* symbols,
                         const char* name, size_t length);
 
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable);
 
-// Returns the number of bytes needed to encode [value] in UTF-8.
+// Devuelve el número de bytes necesarios para codificar [value] en UTF-8.
 //
-// Returns 0 if [value] is too large to encode.
+// Devuelve 0 si [value] es demasiado grande para codificarse.
 int wrenUtf8EncodeNumBytes(int value);
 
-// Encodes value as a series of bytes in [bytes], which is assumed to be large
-// enough to hold the encoded result.
+// Codifica value como una serie de bytes en [bytes], que se asume que es
+// suficiente para albergar la codificación.
 //
-// Returns the number of written bytes.
+// Devuelve el número de bytes escritos.
 int wrenUtf8Encode(int value, uint8_t* bytes);
 
-// Decodes the UTF-8 sequence starting at [bytes] (which has max [length]),
-// returning the code point.
+// Decodifica la secuencia UTF-8 que comienza en [bytes] (que tiene longitud
+// máxima [length]), devolviendo el punto de código.
 //
-// Returns -1 if the bytes are not a valid UTF-8 sequence.
+// Devuelve -1 si los bytes no son una secuencia UTF-8 válida.
 int wrenUtf8Decode(const uint8_t* bytes, uint32_t length);
 
-// Returns the number of bytes in the UTF-8 sequence starting with [byte].
+// Devuelve el número de bytes en la secuencia UTF-8 que comienza por [byte].
 //
-// If the character at that index is not the beginning of a UTF-8 sequence,
-// returns 0.
+// Si el carácter en ese índice no es el comienzo de una secuencia UTF-8,
+// devuelve 0.
 int wrenUtf8DecodeNumBytes(uint8_t byte);
 
-// Returns the smallest power of two that is equal to or greater than [n].
+// Devuelve la potencia de dos más pequeña que es igual o mayor que [n].
 int wrenPowerOf2Ceil(int n);
 
-// Validates that [value] is within `[0, count)`. Also allows
-// negative indices which map backwards from the end. Returns the valid positive
-// index value. If invalid, returns `UINT32_MAX`.
+// Valida que [value] esté dentro de `[0, count)`. También permite índices
+// negativos que cuentan hacia atrás desde el final. Devuelve el valor positivo
+// válido. Si es inválido, devuelve `UINT32_MAX`.
 uint32_t wrenValidateIndex(uint32_t count, int64_t value);
 
 #endif

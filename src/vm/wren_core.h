@@ -3,20 +3,22 @@
 
 #include "wren_vm.h"
 
-// This module defines the built-in classes and their primitives methods that
-// are implemented directly in C code. Some languages try to implement as much
-// of the core module itself in the primary language instead of in the host
-// language.
+// Este módulo define las clases integradas y sus métodos primitivos que se
+// implementan directamente en código C. Algunos lenguajes intentan implementar
+// tanto como sea posible el módulo principal en el lenguaje principal en lugar
+// del lenguaje de host.
 //
-// With Wren, we try to do as much of it in C as possible. Primitive methods
-// are always faster than code written in Wren, and it minimizes startup time
-// since we don't have to parse, compile, and execute Wren code.
+// Con Wren, intentamos hacer tanto como sea posible en C. Los métodos
+// primitivos son siempre más rápidos que el código escrito en Wren, y reducen
+// el tiempo de inicio porque no tenemos que analizar, compilar y ejecutar código
+// Wren.
 //
-// There is one limitation, though. Methods written in C cannot call Wren ones.
-// They can only be the top of the callstack, and immediately return. This
-// makes it difficult to have primitive methods that rely on polymorphic
-// behavior. For example, `System.print` should call `toString` on its argument,
-// including user-defined `toString` methods on user-defined classes.
+// Hay una limitación, sin embargo. Los métodos escritos en C no pueden llamar a
+// los de Wren. Solo pueden estar en la parte superior de la pila de llamadas y
+// devolver de inmediato. Esto hace difícil que los métodos primitivos dependan
+// de comportamiento polimórfico. Por ejemplo, `System.print` debería llamar a
+// `toString` sobre su argumento, incluyendo los métodos `toString`
+// definidos por el usuario en clases definidas por el usuario.
 
 void wrenInitializeCore(WrenVM* vm);
 

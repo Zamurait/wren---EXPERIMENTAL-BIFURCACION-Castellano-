@@ -4,24 +4,25 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
-// Prints the stack trace for the current fiber.
+// Imprime el seguimiento de pila para la fibra actual.
 //
-// Used when a fiber throws a runtime error which is not caught.
+// Se usa cuando una fibra lanza un error de ejecución que no se captura.
 void wrenDebugPrintStackTrace(WrenVM* vm);
 
-// The "dump" functions are used for debugging Wren itself. Normal code paths
-// will not call them unless one of the various DEBUG_ flags is enabled.
+// Las funciones "dump" se usan para depurar Wren mismo. Las rutas normales del
+// código no las llamarán salvo que se habilite alguna de las varias banderas
+// DEBUG_.
 
-// Prints a representation of [value] to stdout.
+// Imprime una representación de [value] en stdout.
 void wrenDumpValue(Value value);
 
-// Prints a representation of the bytecode for [fn] at instruction [i].
+// Imprime una representación del bytecode para [fn] en la instrucción [i].
 int wrenDumpInstruction(WrenVM* vm, ObjFn* fn, int i);
 
-// Prints the disassembled code for [fn] to stdout.
+// Imprime el código desensamblado para [fn] en stdout.
 void wrenDumpCode(WrenVM* vm, ObjFn* fn);
 
-// Prints the contents of the current stack for [fiber] to stdout.
+// Imprime el contenido de la pila actual para [fiber] en stdout.
 void wrenDumpStack(ObjFiber* fiber);
 
 #endif

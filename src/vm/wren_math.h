@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdint.h>
 
-// A union to let us reinterpret a double as raw bits and back.
+// Una unión para permitir reinterpretar un double como bits crudos y volver.
 typedef union
 {
   uint64_t bits64;
