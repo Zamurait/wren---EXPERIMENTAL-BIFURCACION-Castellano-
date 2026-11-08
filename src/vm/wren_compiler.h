@@ -7,15 +7,16 @@
 typedef struct sCompiler Compiler;
 
 // Este módulo define el compilador de Wren. Toma una cadena de código fuente
-// y la lexa, analiza y compila. Wren usa un compilador de una sola pasada. No
-// construye un AST real durante el análisis y luego lo consume para generar
-// código. En su lugar, el analizador emite directamente bytecode.
+// y la analiza léxicamente, la analiza sintácticamente y la compila. Wren usa
+// un compilador de una sola pasada. No construye un AST real durante el
+// análisis y luego lo consume para generar código. En su lugar, el analizador
+// emite directamente bytecode.
 //
 // Esto impone algunas restricciones sobre la gramática y la semántica del
-// lenguaje. Cosas como referencias hacia adelante y búsqueda arbitraria son mucho
-// más difíciles. Sin embargo, a cambio obtenemos mucho.
+// lenguaje. Cosas como las referencias hacia adelante y la búsqueda arbitraria
+// son mucho más difíciles. A cambio, obtenemos mucho.
 //
-// La implementación es mucho más simple porque no necesitamos definir un
+// La implementación es mucho más simple, ya que no necesitamos definir un
 // montón de estructuras de datos AST. Más aún, no tenemos que lidiar con la
 // gestión de memoria de los objetos AST. El compilador casi no hace asignación
 // dinámica mientras se ejecuta.
@@ -27,30 +28,30 @@ typedef struct sCompiler Compiler;
 // [ObjFn] que ejecutará ese código cuando se invoque. Devuelve `NULL` si el
 // código fuente contiene errores de sintaxis.
 //
-// Si [isExpression] es `true`, [source] debe ser una única expresión y este
+// Si [isExpression] es `true`, [source] debe ser una sola expresión y este
 // compilador la convierte en una función que evalúa y devuelve esa expresión.
-// En caso contrario, [source] debe ser una serie de declaraciones de nivel
+// En caso contrario, [source] debe ser una serie de sentencias de nivel
 // superior.
 //
-// Si [printErrors] es `true`, cualquier error de compilación se muestra en
-// stderr. En caso contrario, se descarta silenciosamente.
+// Si [printErrors] es `true`, cualquier error de compilación se envía a stderr.
+// En caso contrario, se descarta silenciosamente.
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
                     bool isExpression, bool printErrors);
 
 // Cuando se define una clase, su superclase no se conoce hasta el tiempo de
-// ejecución, ya que las definiciones de clase son solo declaraciones
-// imperativas. La mayor parte del bytecode para un método no importa, pero hay
-// dos lugares donde sí:
+// ejecución, ya que las definiciones de clase son solo sentencias imperativas.
+// La mayor parte del bytecode para un método no importa, pero hay dos lugares
+// en los que sí importa:
 //
-//   - Para cargar o almacenar un campo, necesitamos saber el índice del campo
-//     en la matriz de campos de la instancia. Debemos ajustarlo para que los
-//     campos de subclases queden después de los de superclases, y no sabemos
-//     esto hasta que se conoce la superclase.
+//   - Para cargar o almacenar un campo, necesitamos saber el índice del campo en
+//     el array de campos de la instancia. Debemos ajustarlo para que los campos
+//     de subclases queden después de los de superclases y no sabemos esto
+//     hasta que se conoce la superclase.
 //
 //   - Las llamadas a superclase necesitan saber a qué superclase despachar.
 //
 // Podríamos manejar esto dinámicamente, pero eso añade sobrecarga. En su lugar,
-// cuando un método se enlaza, recorremos el bytecode de la función y lo
+// cuando se enlaza un método, recorremos el bytecode de la función y lo
 // corregimos.
 void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn);
 
