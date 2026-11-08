@@ -1,8 +1,8 @@
 #ifndef wren_hpp
 #define wren_hpp
 
-// This is a convenience header for users that want to compile Wren as C and
-// link to it from a C++ application.
+// Este es un encabezado de conveniencia para usuarios que quieran compilar
+// Wren como C y enlazarlo desde una aplicación en C++.
 
 extern "C" {
   #include "wren.h"

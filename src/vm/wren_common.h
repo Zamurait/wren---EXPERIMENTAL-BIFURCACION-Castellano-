@@ -1,52 +1,53 @@
 #ifndef wren_common_h
 #define wren_common_h
 
-// This header contains macros and defines used across the entire Wren
-// implementation. In particular, it contains "configuration" defines that
-// control how Wren works. Some of these are only used while hacking on Wren
-// itself.
+// Este encabezado contiene macros y definiciones usadas en toda la
+// implementación de Wren. En particular, contiene definiciones de
+// "configuración" que controlan cómo funciona Wren. Algunas solo se usan al
+// trabajar directamente en Wren mismo.
 //
-// This header is *not* intended to be included by code outside of Wren itself.
+// Este encabezado no está pensado para incluirse en código fuera de Wren.
 
-// Wren pervasively uses the C99 integer types (uint16_t, etc.) along with some
-// of the associated limit constants (UINT32_MAX, etc.). The constants are not
-// part of standard C++, so aren't included by default by C++ compilers when you
-// include <stdint> unless __STDC_LIMIT_MACROS is defined.
+// Wren usa ampliamente los tipos enteros de C99 (uint16_t, etc.) junto con
+// algunas constantes asociadas (UINT32_MAX, etc.). Las constantes no forman
+// parte del estándar de C++, así que no se incluyen por defecto en compiladores
+// de C++ al incluir <stdint> a menos que se defina __STDC_LIMIT_MACROS.
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
-// These flags let you control some details of the interpreter's implementation.
-// Usually they trade-off a bit of portability for speed. They default to the
-// most efficient behavior.
+// Estas banderas te permiten controlar algunos detalles de la implementación
+// del intérprete. Normalmente, equilibran portabilidad con velocidad. Por
+// defecto, usan el comportamiento más eficiente.
 
-// If true, then Wren uses a NaN-tagged double for its core value
-// representation. Otherwise, it uses a larger more conventional struct. The
-// former is significantly faster and more compact. The latter is useful for
-// debugging and may be more portable.
+// Si es true, Wren usa un double etiquetado con NaN para su representación
+// principal de valores. En caso contrario, usa una estructura más grande y más
+// convencional. La primera opción es significativamente más rápida y compacta.
+// La segunda es útil para depuración y puede ser más portable.
 //
-// Defaults to on.
+// Por defecto, está activado.
 #ifndef WREN_NAN_TAGGING
   #define WREN_NAN_TAGGING 1
 #endif
 
-// If true, the VM's interpreter loop uses computed gotos. See this for more:
+// Si es true, el bucle intérprete de la VM usa gotos computados. Consulta esto
+// para más información:
 // http://gcc.gnu.org/onlinedocs/gcc-3.1.1/gcc/Labels-as-Values.html
-// Enabling this speeds up the main dispatch loop a bit, but requires compiler
-// support.
+// Activarlo acelera un poco el bucle principal de despacho, pero requiere apoyo
+// del compilador.
 // see https://bullno1.com/blog/switched-goto for alternative
-// Defaults to true on supported compilers.
+// Por defecto, está activado en compiladores compatibles.
 #ifndef WREN_COMPUTED_GOTO
   #if defined(_MSC_VER) && !defined(__clang__)
-    // No computed gotos in Visual Studio.
+    // No hay gotos computados en Visual Studio.
     #define WREN_COMPUTED_GOTO 0
   #else
     #define WREN_COMPUTED_GOTO 1
   #endif
 #endif
 
-// The VM includes a number of optional modules. You can choose to include
-// these or not. By default, they are all available. To disable one, set the
-// corresponding `WREN_OPT_<name>` define to `0`.
+// La VM incluye varios módulos opcionales. Puedes elegir incluirlos o no. Por
+// defecto, todos están disponibles. Para deshabilitar uno, define
+// `WREN_OPT_<name>` a `0`.
 #ifndef WREN_OPT_META
   #define WREN_OPT_META 1
 #endif
@@ -55,106 +56,112 @@
   #define WREN_OPT_RANDOM 1
 #endif
 
-// These flags are useful for debugging and hacking on Wren itself. They are not
-// intended to be used for production code. They default to off.
+// Estas banderas son útiles para depurar y trabajar en Wren mismo. No están
+// pensadas para usarse en código de producción. Por defecto están desactivadas.
 
-// Set this to true to stress test the GC. It will perform a collection before
-// every allocation. This is useful to ensure that memory is always correctly
-// reachable.
+// Pon esto a true para poner a prueba el GC. Realizará una recolección antes de
+// cada asignación. Esto es útil para asegurar que la memoria siempre sea
+// correctamente alcanzable.
 #define WREN_DEBUG_GC_STRESS 0
 
-// Set this to true to log memory operations as they occur.
+// Pon esto a true para registrar operaciones de memoria según ocurren.
 #define WREN_DEBUG_TRACE_MEMORY 0
 
-// Set this to true to log garbage collections as they occur.
+// Pon esto a true para registrar recolecciones de basura según ocurren.
 #define WREN_DEBUG_TRACE_GC 0
 
-// Set this to true to print out the compiled bytecode of each function.
+// Pon esto a true para imprimir el bytecode compilado de cada función.
 #define WREN_DEBUG_DUMP_COMPILED_CODE 0
 
-// Set this to trace each instruction as it's executed.
+// Pon esto a true para rastrear cada instrucción mientras se ejecuta.
 #define WREN_DEBUG_TRACE_INSTRUCTIONS 0
 
-// The maximum number of module-level variables that may be defined at one time.
-// This limitation comes from the 16 bits used for the arguments to
-// `CODE_LOAD_MODULE_VAR` and `CODE_STORE_MODULE_VAR`.
+// El número máximo de variables a nivel de módulo que pueden definirse a la vez.
+// Esta limitación viene de los 16 bits usados para los argumentos a
+// `CODE_LOAD_MODULE_VAR` y `CODE_STORE_MODULE_VAR`.
 #define MAX_MODULE_VARS 65536
 
-// The maximum number of arguments that can be passed to a method. Note that
-// this limitation is hardcoded in other places in the VM, in particular, the
-// `CODE_CALL_XX` instructions assume a certain maximum number.
+// El número máximo de argumentos que se pueden pasar a un método. Tenga en
+// cuenta que esta limitación está codificada en otros lugares de la VM, en
+// particular, las instrucciones `CODE_CALL_XX` asumen un máximo determinado.
 #define MAX_PARAMETERS 16
 
-// The maximum name of a method, not including the signature. This is an
-// arbitrary but enforced maximum just so we know how long the method name
-// strings need to be in the parser.
+// El nombre máximo de un método, sin incluir la firma. Este es un máximo
+// arbitrario pero forzado simplemente para saber cuánto necesitan medir las
+// cadenas del nombre del método en el analizador.
 #define MAX_METHOD_NAME 64
 
-// The maximum length of a method signature. Signatures look like:
+// La longitud máxima de una firma de método. Las firmas se ven así:
 //
 //     foo        // Getter.
-//     foo()      // No-argument method.
-//     foo(_)     // One-argument method.
-//     foo(_,_)   // Two-argument method.
-//     init foo() // Constructor initializer.
+//     foo()      // Método sin argumentos.
+//     foo(_)     // Método con un argumento.
+//     foo(_,_)   // Método con dos argumentos.
+//     init foo() // Inicializador del constructor.
 //
-// The maximum signature length takes into account the longest method name, the
-// maximum number of parameters with separators between them, "init ", and "()".
+// La longitud máxima de la firma tiene en cuenta el nombre de método más largo,
+// el número máximo de parámetros con separadores entre ellos, "init " y "()".
 #define MAX_METHOD_SIGNATURE (MAX_METHOD_NAME + (MAX_PARAMETERS * 2) + 6)
 
-// The maximum length of an identifier. The only real reason for this limitation
-// is so that error messages mentioning variables can be stack allocated.
+// La longitud máxima de un identificador. La única razón real para esta
+// limitación es que los mensajes de error que mencionan variables puedan
+// asignarse en la pila.
 #define MAX_VARIABLE_NAME 64
 
-// The maximum number of fields a class can have, including inherited fields.
-// This is explicit in the bytecode since `CODE_CLASS` and `CODE_SUBCLASS` take
-// a single byte for the number of fields. Note that it's 255 and not 256
-// because creating a class takes the *number* of fields, not the *highest
-// field index*.
+// El número máximo de campos que una clase puede tener, incluidas las
+// propiedades heredadas. Esto es explícito en el bytecode ya que `CODE_CLASS` y
+// `CODE_SUBCLASS` toman un único byte para el número de campos. Tenga en cuenta
+// que es 255 y no 256 porque crear una clase toma el *número* de campos, no el
+// índice más alto del campo.
 #define MAX_FIELDS 255
 
-// The maximum number of methods the vm can handle.
+// El número máximo de métodos que puede manejar la VM.
 #define MAX_METHODS 65535
 
-// Use the VM's allocator to allocate an object of [type].
+// Usa el asignador de la VM para asignar un objeto de [type].
 #define ALLOCATE(vm, type)                                                     \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
 
-// Use the VM's allocator to allocate an object of [mainType] containing a
-// flexible array of [count] objects of [arrayType].
+// Usa el asignador de la VM para asignar un objeto de [mainType] que contiene
+// una matriz flexible de [count] objetos de [arrayType].
 #define ALLOCATE_FLEX(vm, mainType, arrayType, count)                          \
     ((mainType*)wrenReallocate(vm, NULL, 0,                                    \
         sizeof(mainType) + sizeof(arrayType) * (count)))
 
-// Use the VM's allocator to allocate an array of [count] elements of [type].
+// Usa el asignador de la VM para asignar una matriz de [count] elementos de
+// [type].
 #define ALLOCATE_ARRAY(vm, type, count)                                        \
     ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * (count)))
 
-// Use the VM's allocator to free the previously allocated memory at [pointer].
+// Usa el asignador de la VM para liberar la memoria previamente asignada en
+// [pointer].
 #define DEALLOCATE(vm, pointer) wrenReallocate(vm, pointer, 0, 0)
 
-// The Microsoft compiler does not support the "inline" modifier when compiling
-// as plain C.
+// El compilador de Microsoft no admite el modificador "inline" al compilar
+// como C simple.
 #if defined( _MSC_VER ) && !defined(__cplusplus)
   #define inline _inline
 #endif
 
-// This is used to clearly mark flexible-sized arrays that appear at the end of
-// some dynamically-allocated structs, known as the "struct hack".
+// Esto se usa para marcar claramente las matrices de tamaño flexible que
+// aparecen al final de algunos structs dinámicamente asignados, conocidas como
+// "struct hack".
 #if __STDC_VERSION__ >= 199901L
-  // In C99, a flexible array member is just "[]".
+  // En C99, una matriz flexible es simplemente "[]".
   #define FLEXIBLE_ARRAY
 #else
-  // Elsewhere, use a zero-sized array. It's technically undefined behavior,
-  // but works reliably in most known compilers.
+  // En otros casos, usa una matriz de tamaño cero. Es técnicamente un
+  // comportamiento indefinido, pero funciona de forma fiable en la mayoría de
+  // compiladores conocidos.
   #define FLEXIBLE_ARRAY 0
 #endif
 
-// Assertions are used to validate program invariants. They indicate things the
-// program expects to be true about its internal state during execution. If an
-// assertion fails, there is a bug in Wren.
+// Las aserciones se usan para validar invariantes del programa. Indican cosas
+// que el programa espera que sean verdaderas sobre su estado interno durante la
+// ejecución. Si una aserción falla, hay un bug en Wren.
 //
-// Assertions add significant overhead, so are only enabled in debug builds.
+// Las aserciones añaden un coste significativo, por lo que solo se habilitan en
+// compilaciones de depuración.
 #ifdef DEBUG
 
   #include <stdio.h>
@@ -170,13 +177,14 @@
         }                                                                      \
       } while (false)
 
-  // Indicates that we know execution should never reach this point in the
-  // program. In debug mode, we assert this fact because it's a bug to get here.
+  // Indica que sabemos que la ejecución nunca debería llegar a este punto en el
+  // programa. En modo depuración, afirmamos este hecho porque es un error
+  // llegar aquí.
   //
-  // In release mode, we use compiler-specific built in functions to tell the
-  // compiler the code can't be reached. This avoids "missing return" warnings
-  // in some cases and also lets it perform some optimizations by assuming the
-  // code is never reached.
+  // En modo de lanzamiento, usamos funciones incorporadas específicas del
+  // compilador para indicar que el código no puede alcanzarse. Esto evita
+  // advertencias de "missing return" en algunos casos y también permite que el
+  // compilador haga optimizaciones asumiendo que el código nunca se alcanza.
   #define UNREACHABLE()                                                        \
       do                                                                       \
       {                                                                        \
@@ -189,7 +197,7 @@
 
   #define ASSERT(condition, message) do { } while (false)
 
-  // Tell the compiler that this part of the code will never be reached.
+  // Indica al compilador que esta parte del código nunca será alcanzada.
   #if defined( _MSC_VER )
     #define UNREACHABLE() __assume(0)
   #elif (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))

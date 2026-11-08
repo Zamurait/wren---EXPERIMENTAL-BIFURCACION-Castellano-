@@ -6,52 +6,56 @@
 
 typedef struct sCompiler Compiler;
 
-// This module defines the compiler for Wren. It takes a string of source code
-// and lexes, parses, and compiles it. Wren uses a single-pass compiler. It
-// does not build an actual AST during parsing and then consume that to
-// generate code. Instead, the parser directly emits bytecode.
+// Este módulo define el compilador de Wren. Toma una cadena de código fuente
+// y la lexa, analiza y compila. Wren usa un compilador de una sola pasada. No
+// construye un AST real durante el análisis y luego lo consume para generar
+// código. En su lugar, el analizador emite directamente bytecode.
 //
-// This forces a few restrictions on the grammar and semantics of the language.
-// Things like forward references and arbitrary lookahead are much harder. We
-// get a lot in return for that, though.
+// Esto impone algunas restricciones sobre la gramática y la semántica del
+// lenguaje. Cosas como referencias hacia adelante y búsqueda arbitraria son mucho
+// más difíciles. Sin embargo, a cambio obtenemos mucho.
 //
-// The implementation is much simpler since we don't need to define a bunch of
-// AST data structures. More so, we don't have to deal with managing memory for
-// AST objects. The compiler does almost no dynamic allocation while running.
+// La implementación es mucho más simple porque no necesitamos definir un
+// montón de estructuras de datos AST. Más aún, no tenemos que lidiar con la
+// gestión de memoria de los objetos AST. El compilador casi no hace asignación
+// dinámica mientras se ejecuta.
 //
-// Compilation is also faster since we don't create a bunch of temporary data
-// structures and destroy them after generating code.
+// La compilación también es más rápida porque no creamos un montón de
+// estructuras temporales y las destruimos después de generar el código.
 
-// Compiles [source], a string of Wren source code located in [module], to an
-// [ObjFn] that will execute that code when invoked. Returns `NULL` if the
-// source contains any syntax errors.
+// Compila [source], una cadena de código fuente Wren ubicada en [module], a un
+// [ObjFn] que ejecutará ese código cuando se invoque. Devuelve `NULL` si el
+// código fuente contiene errores de sintaxis.
 //
-// If [isExpression] is `true`, [source] should be a single expression, and
-// this compiles it to a function that evaluates and returns that expression.
-// Otherwise, [source] should be a series of top level statements.
+// Si [isExpression] es `true`, [source] debe ser una única expresión y este
+// compilador la convierte en una función que evalúa y devuelve esa expresión.
+// En caso contrario, [source] debe ser una serie de declaraciones de nivel
+// superior.
 //
-// If [printErrors] is `true`, any compile errors are output to stderr.
-// Otherwise, they are silently discarded.
+// Si [printErrors] es `true`, cualquier error de compilación se muestra en
+// stderr. En caso contrario, se descarta silenciosamente.
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
-                   bool isExpression, bool printErrors);
+                    bool isExpression, bool printErrors);
 
-// When a class is defined, its superclass is not known until runtime since
-// class definitions are just imperative statements. Most of the bytecode for a
-// a method doesn't care, but there are two places where it matters:
+// Cuando se define una clase, su superclase no se conoce hasta el tiempo de
+// ejecución, ya que las definiciones de clase son solo declaraciones
+// imperativas. La mayor parte del bytecode para un método no importa, pero hay
+// dos lugares donde sí:
 //
-//   - To load or store a field, we need to know the index of the field in the
-//     instance's field array. We need to adjust this so that subclass fields
-//     are positioned after superclass fields, and we don't know this until the
-//     superclass is known.
+//   - Para cargar o almacenar un campo, necesitamos saber el índice del campo
+//     en la matriz de campos de la instancia. Debemos ajustarlo para que los
+//     campos de subclases queden después de los de superclases, y no sabemos
+//     esto hasta que se conoce la superclase.
 //
-//   - Superclass calls need to know which superclass to dispatch to.
+//   - Las llamadas a superclase necesitan saber a qué superclase despachar.
 //
-// We could handle this dynamically, but that adds overhead. Instead, when a
-// method is bound, we walk the bytecode for the function and patch it up.
+// Podríamos manejar esto dinámicamente, pero eso añade sobrecarga. En su lugar,
+// cuando un método se enlaza, recorremos el bytecode de la función y lo
+// corregimos.
 void wrenBindMethodCode(ObjClass* classObj, ObjFn* fn);
 
-// Reaches all of the heap-allocated objects in use by [compiler] (and all of
-// its parents) so that they are not collected by the GC.
+// Recorre todos los objetos asignados en el heap que estén en uso por
+// [compiler] (y todos sus padres) para que no sean recogidos por el GC.
 void wrenMarkCompiler(WrenVM* vm, Compiler* compiler);
 
 #endif
